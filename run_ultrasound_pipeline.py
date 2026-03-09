@@ -105,7 +105,10 @@ def run_step(cmd: list, step_name: str, logger: logging.Logger, cwd: str = None)
                 f"[{step_name}] FAILED (return code {result.returncode}) "
                 f"after {elapsed:.1f}s"
             )
-            logger.error(f"  stderr: {result.stderr[-500:] if result.stderr else 'none'}")
+            if result.stdout:
+                logger.error(f"  stdout (last 1000 chars): {result.stdout[-1000:]}")
+            if result.stderr:
+                logger.error(f"  stderr (last 1000 chars): {result.stderr[-1000:]}")
             return False
 
         logger.info(f"[{step_name}] Completed in {elapsed:.1f}s")

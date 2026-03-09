@@ -17,7 +17,9 @@ def run_step(args_list, step_name):
     if result.returncode != 0:
         print(f"ERROR in {step_name}:", flush=True)
         if result.stderr:
-            print(result.stderr, flush=True)
+            # Print full stderr so the actual error is visible
+            for line in result.stderr.strip().split('\n'):
+                print(f"  STDERR: {line}", flush=True)
         raise RuntimeError(f"{step_name} failed with return code {result.returncode}")
     print(f"----- {step_name} completed successfully", flush=True)
 

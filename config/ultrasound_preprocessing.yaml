@@ -12,9 +12,10 @@ filter_using_direct_flow: true
 direct_flow_threshold: 2.5
 
 # --- DINO embeddings for training & dino-bb ---
-dino_model_name: dinov2_vitl14
+# Using ViT-Small for T4 GPU compatibility (ViT-Large OOMs on T4)
+dino_model_name: dinov2_vits14
 dino_facet: tokens
-dino_layer: 15
+dino_layer: 11
 dino_stride: 7
 
 # --- DINO embeddings for FG mask ---
