@@ -25,7 +25,7 @@ echo "=== Training DINO-Tracker on $VIDEO_NAME ==="
 python train.py \
     --config config/ultrasound_train.yaml \
     --data-path "$DATA_PATH" \
-    --wandb-entity multincde_daml-org \
+    --wandb-entity tristan-carter66-duke-university \
     --wandb-project dinotrackertesting \
     --wandb-group ultrasound-pipeline
 

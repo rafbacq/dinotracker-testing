@@ -349,8 +349,8 @@ def main():
 
     # Weights & Biases integration
     parser.add_argument(
-        "--wandb-entity", type=str, default="multincde_daml-org",
-        help="Wandb entity/org (default: multincde_daml-org)",
+        "--wandb-entity", type=str, default="tristan-carter66-duke-university",
+        help="Wandb entity/org (default: tristan-carter66-duke-university)",
     )
     parser.add_argument(
         "--wandb-project", type=str, default="dinotrackertesting",

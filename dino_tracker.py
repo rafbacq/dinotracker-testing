@@ -422,19 +422,23 @@ class DINOTracker():
         if not self.use_wandb:
             return
         video_name = Path(self.data_path).name
-        wandb.init(
-            entity=self.wandb_config.get("entity"),
-            project=self.wandb_config.get("project", "dino-tracker"),
-            name=f"{video_name}",
-            group=self.wandb_config.get("group", "ultrasound-pipeline"),
-            config={
-                "video_name": video_name,
-                "data_path": str(self.data_path),
-                **self.config,
-            },
-            reinit=True,
-        )
-        logging.info(f"Wandb run initialized: {wandb.run.name} ({wandb.run.url})")
+        try:
+            wandb.init(
+                entity=self.wandb_config.get("entity"),
+                project=self.wandb_config.get("project", "dino-tracker"),
+                name=f"{video_name}",
+                group=self.wandb_config.get("group", "ultrasound-pipeline"),
+                config={
+                    "video_name": video_name,
+                    "data_path": str(self.data_path),
+                    **self.config,
+                },
+                reinit=True,
+            )
+            logging.info(f"Wandb run initialized: {wandb.run.name} ({wandb.run.url})")
+        except Exception as e:
+            logging.warning(f"Wandb init failed (training will continue without logging): {e}")
+            self.use_wandb = False
 
     def _finish_wandb(self):
         """Finish the current wandb run."""
