@@ -3,8 +3,9 @@
 
 # --- OF trajectories config ---
 # Ultrasound frames are roughly 4:3 aspect ratio and lower resolution
-video_resh: 420
-video_resw: 560
+# Reduced resolution for faster demo (divisible by 14 for DINO patches)
+video_resh: 280
+video_resw: 378
 min_trajectory_length: 2
 threshold: 1.5
 filter_using_direct_flow: true

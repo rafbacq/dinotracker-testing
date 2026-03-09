@@ -39,7 +39,7 @@ DEFAULT_INPUT_DIR = "usliverseq-mp4"
 DEFAULT_OUTPUT_DIR = "outputs"
 DEFAULT_PREPROCESS_CONFIG = "config/ultrasound_preprocessing.yaml"
 DEFAULT_TRAIN_CONFIG = "config/ultrasound_train.yaml"
-DEFAULT_TARGET_FRAMES = 150     # Target frames per video after subsampling
+DEFAULT_TARGET_FRAMES = 70      # Target frames per video after subsampling
 DEFAULT_VIS_FPS = 10            # Visualization output framerate
 DEFAULT_GRID_INTERVAL = 10     # Pixel interval for grid query points
 

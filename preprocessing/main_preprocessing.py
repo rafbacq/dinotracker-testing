@@ -35,7 +35,10 @@ if __name__ == "__main__":
     subprocess.run(args_list)
 
     # 3. create FG masks using DINO features - if GT masks are not provided
-    if not os.path.exists(config['masks_path']):
+    masks_exist = os.path.exists(config['masks_path']) and len(
+        [f for f in os.listdir(config['masks_path']) if f.endswith(('.jpg', '.png'))]
+    ) > 0
+    if not masks_exist:
         # compute DINO embeddings for fg masks
         args_list = ['python', './preprocessing/save_dino_embed_video.py',
                         '--data-path', args.data_path, '--config', args.config, '--for-mask']

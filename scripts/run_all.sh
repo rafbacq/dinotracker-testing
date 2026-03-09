@@ -37,7 +37,7 @@ python run_ultrasound_pipeline.py \
     --output-dir outputs \
     --preprocess-config config/ultrasound_preprocessing.yaml \
     --train-config config/ultrasound_train.yaml \
-    --target-frames 150 \
+    --target-frames 70 \
     --vis-fps 10 \
     --grid-interval 10 \
     $VIDEO_ARGS

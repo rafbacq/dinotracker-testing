@@ -26,7 +26,7 @@ echo "=== Step 1/2: Extracting frames from $MP4_PATH ==="
 python preprocessing/extract_ultrasound_frames.py \
     --video-path "$MP4_PATH" \
     --output-folder "$DATA_PATH/video" \
-    --target-frames 150
+    --target-frames 70
 
 echo "=== Step 2/2: Running preprocessing pipeline ==="
 python preprocessing/main_preprocessing.py \

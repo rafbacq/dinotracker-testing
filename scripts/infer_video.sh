@@ -31,8 +31,8 @@ python inference_grid.py \
 echo "=== Step 2/2: Visualizing trajectories for $VIDEO_NAME ==="
 python visualization/visualize_rainbow.py \
     --data-path "$DATA_PATH" \
-    --infer-res-size 420 560 \
-    --of-res-size 420 560 \
+    --infer-res-size 280 378 \
+    --of-res-size 280 378 \
     --fps 10
 
 echo "=== Inference + visualization complete for $VIDEO_NAME ==="

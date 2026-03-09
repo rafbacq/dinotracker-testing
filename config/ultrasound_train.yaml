@@ -7,8 +7,8 @@ checkpoint_interval: 2000
 
 ########################## data loader ##########################
 # Must match preprocessing resolution
-video_resw: 560
-video_resh: 420
+video_resw: 378
+video_resh: 280
 
 fg_traj_ratio: 0.5
 # Keep trajectories in CPU for longer videos (subsampled to ~150 frames)
@@ -20,9 +20,8 @@ batch_n_frames: 4
 
 
 ########################## optimization ##########################
-# Slightly reduced iterations: ultrasound motion is less complex
-# than natural video (primarily breathing motion)
-total_iterations: 8000
+# Reduced iterations for demo (still shows convergence)
+total_iterations: 4000
 lr_delta_dino: 0.01
 lr_cnn_refiner: 0.01
 
@@ -34,7 +33,7 @@ scheduler_gamma: 0.999
 
 # cycle-consistency loss
 lambda_cyc: 0.5
-apply_cyc_after: 4000
+apply_cyc_after: 2000
 cyc_n_frames: 4
 cyc_batch_size_per_frame: 256
 cyc_fg_points_ratio: 0.7
@@ -56,7 +55,7 @@ cl_fg_points_ratio: 0.7
 cl_temp: 0.1
 cl_div_dino_bb: 700
 cl_div_ref_bb: 900
-apply_cl_ref_after: 4000
+apply_cl_ref_after: 2000
 
 # weighting ambiguity
 bb_amb_sig_a: 27
