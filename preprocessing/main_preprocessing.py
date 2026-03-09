@@ -8,6 +8,20 @@ from utils import add_config_paths
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 
+def run_step(args_list, step_name):
+    """Run a preprocessing subprocess with error checking."""
+    print(f"----- Running {' '.join(args_list)}", flush=True)
+    result = subprocess.run(args_list, capture_output=True, text=True)
+    if result.stdout:
+        print(result.stdout, flush=True)
+    if result.returncode != 0:
+        print(f"ERROR in {step_name}:", flush=True)
+        if result.stderr:
+            print(result.stderr, flush=True)
+        raise RuntimeError(f"{step_name} failed with return code {result.returncode}")
+    print(f"----- {step_name} completed successfully", flush=True)
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", default="./configs/preprocessing.yaml", help="Config path", type=str)
@@ -24,15 +38,12 @@ if __name__ == "__main__":
                     '--threshold', str(config['threshold']), '--infer-res-size', str(config['video_resh']), str(config['video_resw'])]
     if config['filter_using_direct_flow']:
         args_list += ['--filter-using-direct-flow', '--direct-flow-threshold', str(config['direct_flow_threshold'])]
-    print(f"----- Running {' '.join(args_list)}", flush=True)
-    subprocess.run(args_list)
+    run_step(args_list, "RAFT optical flow extraction")
 
     # 2. compute DINO embeddings for training & dino-bb
     args_list = ['python', './preprocessing/save_dino_embed_video.py', 
                     '--data-path', args.data_path, '--config', args.config]
-                    
-    print(f"----- Running {' '.join(args_list)}", flush=True)
-    subprocess.run(args_list)
+    run_step(args_list, "DINO embeddings (training)")
 
     # 3. create FG masks using DINO features - if GT masks are not provided
     masks_exist = os.path.exists(config['masks_path']) and len(
@@ -42,25 +53,27 @@ if __name__ == "__main__":
         # compute DINO embeddings for fg masks
         args_list = ['python', './preprocessing/save_dino_embed_video.py',
                         '--data-path', args.data_path, '--config', args.config, '--for-mask']
-        print(f"----- Running {' '.join(args_list)}", flush=True)
-        subprocess.run(args_list)
+        run_step(args_list, "DINO embeddings (mask)")
 
         args_list = ['python', './preprocessing/create_fg_mask.py', 
                      '--dino-embed-video-path', config['mask_dino_embed_video_path'], '--h', str(config['video_resh']), '--w', str(config['video_resw']), '--mask-path', config['masks_path'], 
                         '--fg_mask_threshold', str(config['fg_mask_threshold'])]
-        print(f"----- Running {' '.join(args_list)}", flush=True)
-        subprocess.run(args_list)
+        run_step(args_list, "FG mask creation")
+
+        # Verify masks were actually created
+        mask_files = [f for f in os.listdir(config['masks_path']) if f.endswith(('.jpg', '.png'))] if os.path.exists(config['masks_path']) else []
+        if len(mask_files) == 0:
+            raise RuntimeError(f"FG mask creation produced no mask files in {config['masks_path']}")
+        print(f"Created {len(mask_files)} mask files", flush=True)
     else:
         print("Masks already exist, skipping...", flush=True)
     
     # 4. split trajectories to FG & BG
     args_list = ['python', './preprocessing/split_trajectories_to_fg_bg.py', 
                  '--traj_path', config['trajectories_file'], '--fg_masks_path', config['masks_path'], '--fg_traj_path', config['fg_trajectories_file'], '--bg_traj_path', config['bg_trajectories_file']]
-    print(f"----- Running {' '.join(args_list)}", flush=True)
-    subprocess.run(args_list)
+    run_step(args_list, "Split trajectories FG/BG")
     
     # 5. preprocess DINO best-buddies
     args_list = ['python', './preprocessing_dino_bb/main_dino_bb_preprocessing.py', 
                  '--config', args.config, '--data-path', str(args.data_path)]
-    print(f"----- Running {' '.join(args_list)}", flush=True)
-    subprocess.run(args_list)
+    run_step(args_list, "DINO best-buddies")

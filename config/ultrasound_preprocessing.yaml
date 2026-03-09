@@ -18,9 +18,10 @@ dino_layer: 15
 dino_stride: 7
 
 # --- DINO embeddings for FG mask ---
-mask_dino_model_name: dinov2_vitl14
+# Use smaller ViT-Small model for mask generation (faster, less VRAM)
+mask_dino_model_name: dinov2_vits14
 mask_dino_facet: tokens
-mask_dino_layer: 23
+mask_dino_layer: 11
 mask_dino_stride: 7
 
 # --- FG mask ---
