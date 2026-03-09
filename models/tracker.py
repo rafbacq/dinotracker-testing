@@ -46,9 +46,10 @@ class Tracker(nn.Module):
         
         # DINO embed
         self.load_dino_embed_video()
+        dino_embed_dim = self.dino_embed_video.shape[1]  # C dimension
 
-        # Delta-DINO
-        self.delta_dino = DeltaDINO(vit_stride=self.stride).to(device)
+        # Delta-DINO (use actual embedding dim from loaded DINO features)
+        self.delta_dino = DeltaDINO(vit_stride=self.stride, channels=[3, 64, 128, 256, dino_embed_dim]).to(device)
 
         # CNN-Refiner
         t, c, h, w = self.video.shape
