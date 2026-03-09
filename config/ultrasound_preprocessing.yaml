@@ -1,0 +1,32 @@
+# Ultrasound-adapted preprocessing config for DINO-Tracker
+# Adapted from preprocessing.yaml for grayscale liver ultrasound videos
+
+# --- OF trajectories config ---
+# Ultrasound frames are roughly 4:3 aspect ratio and lower resolution
+video_resh: 420
+video_resw: 560
+min_trajectory_length: 2
+threshold: 1.5
+filter_using_direct_flow: true
+direct_flow_threshold: 2.5
+
+# --- DINO embeddings for training & dino-bb ---
+dino_model_name: dinov2_vitl14
+dino_facet: tokens
+dino_layer: 15
+dino_stride: 7
+
+# --- DINO embeddings for FG mask ---
+mask_dino_model_name: dinov2_vitl14
+mask_dino_facet: tokens
+mask_dino_layer: 23
+mask_dino_stride: 7
+
+# --- FG mask ---
+# Ultrasound saliency patterns differ from natural images;
+# lower threshold to capture more of the liver region
+fg_mask_threshold: 0.5
+
+# --- DINO Best-Buddies ---
+dino_bb_box_size: 30
+dino_bb_iou_threshold: 0.2
