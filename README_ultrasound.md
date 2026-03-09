@@ -27,6 +27,21 @@ export PYTHONPATH=$(pwd):$PYTHONPATH
 
 > **Note**: A CUDA-capable GPU is required for training and preprocessing (RAFT, DINOv2).
 
+## Google Colab
+
+**Option A** — Use the provided notebook:
+Upload and open `run_on_colab.ipynb` in Google Colab (select T4 GPU runtime).
+
+**Option B** — Manual terminal setup:
+```bash
+# In Colab terminal:
+git clone https://github.com/rafbacq/dinotracker-testing.git /content/dinotracker-testing
+cd /content/dinotracker-testing
+bash scripts/setup_colab.sh            # Fixes numpy/OpenCV version conflict
+export PYTHONPATH=$(pwd):$PYTHONPATH
+bash scripts/run_all.sh
+```
+
 ## Quick Start
 
 ### Process all videos

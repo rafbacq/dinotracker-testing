@@ -14,6 +14,12 @@ from data.dataset import DinoTrackerSampler, RangeNormalizer
 from preprocessing.split_trajectories_to_fg_bg import load_masks
 from utils import add_config_paths
 
+try:
+    import wandb
+    WANDB_AVAILABLE = True
+except ImportError:
+    WANDB_AVAILABLE = False
+
 
 device = "cuda:0" if torch.cuda.is_available() else "cpu"
 
@@ -24,6 +30,11 @@ class DINOTracker():
         
         self.load_config(args.config)
         self.set_paths(args.data_path)
+        self.data_path = args.data_path
+
+        # Wandb configuration (optional)
+        self.wandb_config = getattr(args, 'wandb_config', None)
+        self.use_wandb = (self.wandb_config is not None and WANDB_AVAILABLE)
 
         self.orig_video_res_h, self.orig_video_res_w, video_rest = self.get_original_video_res(self.video_path)
         self.range_normalizer = RangeNormalizer(shapes=(self.config["video_resw"], self.config["video_resh"], video_rest)).to(device) # nn.Module
@@ -387,7 +398,48 @@ class DINOTracker():
         loss_str += f", loss_total: {loss_total:.4f}"
         
         logging.info(loss_str)
+
+        # Log to wandb
+        if self.use_wandb:
+            wandb_log = {
+                "iteration": i,
+                "loss/total": loss_total,
+                "loss/optical_flow": loss_of,
+                "loss/contrastive_dino_bb": loss_cl_dino_bb,
+                "loss/emb_norm_reg": loss_emb_norm_reg,
+                "loss/angle_reg": loss_angle_reg,
+            }
+            if loss_cl_refiner is not None:
+                wandb_log["loss/contrastive_refiner"] = loss_cl_refiner
+            if loss_cyc is not None:
+                wandb_log["loss/cycle_consistency"] = loss_cyc
+            wandb.log(wandb_log, step=i)
+
         self.init_losses()
+
+    def _init_wandb(self):
+        """Initialize a wandb run for this video's training."""
+        if not self.use_wandb:
+            return
+        video_name = Path(self.data_path).name
+        wandb.init(
+            entity=self.wandb_config.get("entity"),
+            project=self.wandb_config.get("project", "dino-tracker"),
+            name=f"{video_name}",
+            group=self.wandb_config.get("group", "ultrasound-pipeline"),
+            config={
+                "video_name": video_name,
+                "data_path": str(self.data_path),
+                **self.config,
+            },
+            reinit=True,
+        )
+        logging.info(f"Wandb run initialized: {wandb.run.name} ({wandb.run.url})")
+
+    def _finish_wandb(self):
+        """Finish the current wandb run."""
+        if self.use_wandb and wandb.run is not None:
+            wandb.finish()
 
     def train(self):
         self.load_fg_masks()
@@ -395,6 +447,9 @@ class DINOTracker():
         total_iterations = self.config["total_iterations"]
         checkpoint_interval = self.config["checkpoint_interval"]
         sampler_batch_iterations = self.config.get("sampler_batch_iterations", 100_000) # only relevant if in config, 100k is never reached
+
+        # Initialize wandb for this video
+        self._init_wandb()
 
         self.load_dino_best_buddies()
         train_sampler = self.get_sampler()
@@ -446,3 +501,6 @@ class DINOTracker():
                 train_sampler.load_next_batch()
 
         model.save_weights(total_iterations)
+
+        # Finish wandb run
+        self._finish_wandb()

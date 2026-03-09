@@ -146,6 +146,9 @@ def process_video(
     skip_training: bool = False,
     skip_inference: bool = False,
     skip_visualization: bool = False,
+    wandb_entity: str = None,
+    wandb_project: str = None,
+    wandb_group: str = None,
 ) -> dict:
     """
     Process a single video through the complete DINO-Tracker pipeline.
@@ -212,13 +215,22 @@ def process_video(
 
     # ── Step 3: Training ──────────────────────────────────────────────
     if not skip_training:
+        train_cmd = [
+            sys.executable,
+            "train.py",
+            "--config", train_config,
+            "--data-path", data_path,
+        ]
+        # Add wandb args if provided
+        if wandb_entity:
+            train_cmd += ["--wandb-entity", wandb_entity]
+        if wandb_project:
+            train_cmd += ["--wandb-project", wandb_project]
+        if wandb_group:
+            train_cmd += ["--wandb-group", wandb_group]
+
         success = run_step(
-            [
-                sys.executable,
-                "train.py",
-                "--config", train_config,
-                "--data-path", data_path,
-            ],
+            train_cmd,
             step_name=f"{video_name}/train",
             logger=logger,
         )
@@ -332,6 +344,24 @@ def main():
     parser.add_argument("--skip-inference", action="store_true")
     parser.add_argument("--skip-visualization", action="store_true")
 
+    # Weights & Biases integration
+    parser.add_argument(
+        "--wandb-entity", type=str, default="multincde_daml-org",
+        help="Wandb entity/org (default: multincde_daml-org)",
+    )
+    parser.add_argument(
+        "--wandb-project", type=str, default="dinotrackertesting",
+        help="Wandb project name (default: dinotrackertesting)",
+    )
+    parser.add_argument(
+        "--wandb-group", type=str, default="ultrasound-pipeline",
+        help="Wandb group for organizing runs (default: ultrasound-pipeline)",
+    )
+    parser.add_argument(
+        "--no-wandb", action="store_true",
+        help="Disable wandb logging",
+    )
+
     args = parser.parse_args()
 
     # Setup
@@ -357,6 +387,11 @@ def main():
         logger.info(f"VIDEO {i+1}/{len(videos)}: {Path(video_path).name}")
         logger.info(f"{'#'*60}")
 
+        # Resolve wandb args
+        wandb_entity = None if args.no_wandb else args.wandb_entity
+        wandb_project = None if args.no_wandb else args.wandb_project
+        wandb_group = None if args.no_wandb else args.wandb_group
+
         try:
             result = process_video(
                 video_path=video_path,
@@ -372,6 +407,9 @@ def main():
                 skip_training=args.skip_training,
                 skip_inference=args.skip_inference,
                 skip_visualization=args.skip_visualization,
+                wandb_entity=wandb_entity,
+                wandb_project=wandb_project,
+                wandb_group=wandb_group,
             )
             all_results.append(result)
         except Exception as e:

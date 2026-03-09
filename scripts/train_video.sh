@@ -24,7 +24,10 @@ DATA_PATH="outputs/$VIDEO_NAME"
 echo "=== Training DINO-Tracker on $VIDEO_NAME ==="
 python train.py \
     --config config/ultrasound_train.yaml \
-    --data-path "$DATA_PATH"
+    --data-path "$DATA_PATH" \
+    --wandb-entity multincde_daml-org \
+    --wandb-project dinotrackertesting \
+    --wandb-group ultrasound-pipeline
 
 echo "=== Training complete for $VIDEO_NAME ==="
 echo "  Checkpoints saved in $DATA_PATH/models/dino_tracker/"
