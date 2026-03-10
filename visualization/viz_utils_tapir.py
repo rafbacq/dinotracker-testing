@@ -226,9 +226,9 @@ def plot_tracks_v2(
     plt.margins(0, 0)
     fig.canvas.draw()
     width, height = fig.get_size_inches() * fig.get_dpi()
-    img = np.frombuffer(fig.canvas.tostring_rgb(), dtype='uint8').reshape(
-        int(height), int(width), 3
-    )
+    img = np.asarray(fig.canvas.buffer_rgba(), dtype='uint8').reshape(
+        int(height), int(width), 4
+    )[:, :, :3]
     disp.append(np.copy(img))
 
   for fig in figs:
@@ -770,9 +770,9 @@ def plot_tracks_tails(
     plt.margins(0, 0)
     fig.canvas.draw()
     width, height = fig.get_size_inches() * fig.get_dpi()
-    img = np.frombuffer(fig.canvas.tostring_rgb(), dtype='uint8').reshape(
-        int(height), int(width), 3
-    )
+    img = np.asarray(fig.canvas.buffer_rgba(), dtype='uint8').reshape(
+        int(height), int(width), 4
+    )[:, :, :3]
     disp.append(np.copy(img))
 
   for fig in figs:
