@@ -21,12 +21,17 @@ import os
 import numpy as np
 import imageio
 
+from preprocessing.crop_ultrasound_roi import detect_ultrasound_roi, crop_to_roi
+
 
 def extract_frames(
     video_path: str,
     output_folder: str,
     subsample_rate: int = 1,
     max_frames: int = None,
+    crop_roi: bool = True,
+    roi_threshold: int = 10,
+    roi_pad: int = 5,
 ):
     """
     Extract and convert frames from a grayscale ultrasound MP4.
@@ -37,6 +42,9 @@ def extract_frames(
         subsample_rate: Take every Nth frame. Higher = fewer frames.
         max_frames: Maximum number of frames to extract. None = no limit
                     (after subsampling).
+        crop_roi: If True, detect and crop to the ultrasound sector ROI.
+        roi_threshold: Intensity threshold (0-255) for ROI detection.
+        roi_pad: Padding pixels around the detected ROI.
     """
     os.makedirs(output_folder, exist_ok=True)
 
@@ -66,6 +74,7 @@ def extract_frames(
     saved_count = 0
     out_idx = 0
     frame_rgb = None
+    roi_bbox = None  # Detected once from the first frame, reused for all
 
     for frame_idx, frame in enumerate(reader):
         if frame_idx not in frame_indices_set:
@@ -92,6 +101,23 @@ def extract_frames(
         # Ensure uint8
         if frame_rgb.dtype != np.uint8:
             frame_rgb = frame_rgb.astype(np.uint8)
+
+        # ROI cropping: detect from first frame, apply to all
+        if crop_roi:
+            if roi_bbox is None:
+                roi_bbox = detect_ultrasound_roi(
+                    frame_rgb,
+                    threshold=roi_threshold,
+                    pad=roi_pad,
+                )
+                if roi_bbox is not None:
+                    y0, y1, x0, x1 = roi_bbox
+                    print(f"  ROI detected: y=[{y0}:{y1}], x=[{x0}:{x1}] "
+                          f"({x1 - x0}x{y1 - y0} from {frame_rgb.shape[1]}x{frame_rgb.shape[0]})")
+                else:
+                    print("  WARNING: ROI detection failed, saving uncropped frames")
+            if roi_bbox is not None:
+                frame_rgb = crop_to_roi(frame_rgb, roi_bbox)
 
         out_path = os.path.join(output_folder, f"{out_idx:05d}.jpg")
         imageio.imwrite(out_path, frame_rgb)
@@ -156,6 +182,29 @@ if __name__ == "__main__":
         default=None,
         help="Auto-compute subsample rate to reach this many frames",
     )
+    parser.add_argument(
+        "--crop-roi",
+        action="store_true",
+        default=True,
+        help="Crop to ultrasound fan sector ROI (default: True)",
+    )
+    parser.add_argument(
+        "--no-crop-roi",
+        action="store_true",
+        help="Disable ROI cropping",
+    )
+    parser.add_argument(
+        "--roi-threshold",
+        type=int,
+        default=10,
+        help="Intensity threshold for ROI detection (default: 10)",
+    )
+    parser.add_argument(
+        "--roi-pad",
+        type=int,
+        default=5,
+        help="Padding pixels around detected ROI (default: 5)",
+    )
     args = parser.parse_args()
 
     subsample_rate = args.subsample_rate
@@ -163,9 +212,14 @@ if __name__ == "__main__":
         subsample_rate = compute_subsample_rate(args.video_path, args.target_frames)
         print(f"Auto-computed subsample rate: {subsample_rate}")
 
+    do_crop = args.crop_roi and not args.no_crop_roi
+
     extract_frames(
         video_path=args.video_path,
         output_folder=args.output_folder,
         subsample_rate=subsample_rate,
         max_frames=args.max_frames,
+        crop_roi=do_crop,
+        roi_threshold=args.roi_threshold,
+        roi_pad=args.roi_pad,
     )

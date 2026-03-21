@@ -33,3 +33,11 @@ fg_mask_threshold: 0.5
 # --- DINO Best-Buddies ---
 dino_bb_box_size: 30
 dino_bb_iou_threshold: 0.2
+
+# --- ROI cropping ---
+# Crop out dead black space, UI legends, and depth markers around the
+# ultrasound fan sector. Highly recommended — DINOv2 patches and RAFT
+# optical flow waste capacity on non-content regions.
+crop_ultrasound_roi: true
+roi_pad_pixels: 5          # safety margin around detected ROI
+roi_threshold: 10          # pixel intensity threshold (0-255) for content detection

@@ -117,6 +117,9 @@ Ultrasound videos are 5–10 minutes at 14–25 fps (4,200–15,000 frames). DIN
 ### Resolution
 Ultrasound frames have roughly 4:3 aspect ratio, unlike the 16:9 used in the original DINO-Tracker demos. We resize to **420×560** to match the aspect ratio while staying close to the original model's expected input size.
 
+### ROI Cropping (Ultrasound Sector Extraction)
+Raw ultrasound frames contain a bright fan-shaped sector surrounded by dead black space, UI legends (depth markers, patient info), and color bars. We **automatically detect and crop to the fan sector** during frame extraction using thresholding + morphological operations + largest contour detection. The ROI is detected once from the first frame and applied to all subsequent frames. This is controlled by `crop_ultrasound_roi: true` in the preprocessing config. Removing dead space ensures DINOv2 patches and RAFT optical flow focus entirely on meaningful tissue content.
+
 ## Limitations
 
 1. **Domain gap**: DINOv2 features were learned on natural RGB images. On triplicated grayscale ultrasound, features have reduced discriminative power. DINO best-buddy correspondences may be noisier, potentially affecting training convergence.

@@ -171,6 +171,20 @@ def process_video(
 
     # ── Step 1: Frame extraction ──────────────────────────────────────
     if not skip_extraction:
+        # Read crop config from preprocessing YAML
+        import yaml as _yaml
+        with open(preprocess_config, "r") as f:
+            _pcfg = _yaml.safe_load(f)
+        crop_args = []
+        if _pcfg.get("crop_ultrasound_roi", True):
+            crop_args += [
+                "--crop-roi",
+                "--roi-threshold", str(_pcfg.get("roi_threshold", 10)),
+                "--roi-pad", str(_pcfg.get("roi_pad_pixels", 5)),
+            ]
+        else:
+            crop_args += ["--no-crop-roi"]
+
         success = run_step(
             [
                 sys.executable,
@@ -178,7 +192,7 @@ def process_video(
                 "--video-path", video_path,
                 "--output-folder", video_frames_dir,
                 "--target-frames", str(target_frames),
-            ],
+            ] + crop_args,
             step_name=f"{video_name}/extract_frames",
             logger=logger,
         )
