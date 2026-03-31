@@ -3,3 +3,11 @@
 .DS_Store
 
 *.zip
+
+# Ignore generated outputs, weights, logs, and scratch scripts
+outputs/
+wandb/
+*.pt
+*.log
+parsed_*.txt
+*.ps1

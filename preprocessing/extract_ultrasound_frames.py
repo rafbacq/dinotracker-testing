@@ -18,8 +18,14 @@ Why triplicate rather than colormap?
 
 import argparse
 import os
+import sys
 import numpy as np
 import imageio
+
+# Ensure project root is on sys.path for subprocess execution
+_project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if _project_root not in sys.path:
+    sys.path.insert(0, _project_root)
 
 from preprocessing.crop_ultrasound_roi import detect_ultrasound_roi, crop_to_roi
 

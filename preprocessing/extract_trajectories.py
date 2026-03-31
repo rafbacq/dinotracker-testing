@@ -9,6 +9,12 @@ from tqdm import tqdm
 from tqdm.contrib import tzip
 from matplotlib import pyplot as plt
 import os
+import sys
+
+# Ensure project root is on sys.path for subprocess execution
+_project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if _project_root not in sys.path:
+    sys.path.insert(0, _project_root)
 
 device = "cuda:0" if torch.cuda.is_available() else "cpu"
 

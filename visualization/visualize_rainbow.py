@@ -1,3 +1,7 @@
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import argparse
 from pathlib import Path
 from PIL import Image
@@ -59,9 +63,18 @@ def run(args):
     video_folder = config_paths["video_folder"]
     masks_path = Path(config_paths["masks_path"])
     segm_mask_path = sorted(list(Path(masks_path).glob("*.jpg")) + list(Path(masks_path).glob("*.png")))[args.vis_start_frame]
-    bg_of_trajectories_path = config_paths["bg_trajectories_file"]
-    trajs_path = os.path.join(config_paths["grid_trajectories_dir"], f"grid_trajectories.npy")
-    occ_path = os.path.join(config_paths["grid_occlusions_dir"], f"grid_occlusions.npy")
+    
+    # Because of the inverted mask bug during preprocessing, the actual background (border)
+    # trajectories are stored in 'fg_trajectories_file' and vice-versa.
+    bg_of_trajectories_path = config_paths["fg_trajectories_file"] 
+    trajs_dir = config_paths["grid_trajectories_dir"]
+    occ_dir = config_paths["grid_occlusions_dir"]
+    if getattr(args, "fm", False):
+        trajs_dir = os.path.join(args.data_path, "fm_grid_trajectories")
+        occ_dir = os.path.join(args.data_path, "fm_grid_occlusions")
+
+    trajs_path = os.path.join(trajs_dir, f"grid_trajectories.npy")
+    occ_path = os.path.join(occ_dir, f"grid_occlusions.npy")
     model_vis_dir = config_paths['model_vis_dir']
     
 
@@ -87,10 +100,17 @@ def run(args):
     
     if args.erosion_kernel_size is not None:
         erosion_kernel = torch.ones(args.erosion_kernel_size, args.erosion_kernel_size)
-        segm_mask = morph.erosion(torch.from_numpy(segm_mask).float()[None, None], erosion_kernel).bool().squeeze()  # Erosion, H x W
+        # Apply erosion to the corrected foreground mask (which should be 1 where liver is, 0 otherwise)
+        # Before erosion: segm_mask is background=1, liver=0
+        fg_mask_bool = torch.from_numpy(segm_mask).float()[None, None] == 0  # 1 for Liver
+        segm_mask = (~morph.erosion(fg_mask_bool, erosion_kernel).bool()).squeeze().cpu().numpy()  # Invert back: 0 for eroded Liver, 1 for bg
 
     coords = tracks[:,0].round().astype(np.int32)
-    is_fg = (segm_mask[coords[:, 1], coords[:, 0]] > 0)
+    coords[:, 0] = np.clip(coords[:, 0], 0, video_w - 1)
+    coords[:, 1] = np.clip(coords[:, 1], 0, video_h - 1)
+    
+    # We want points located on the liver. The liver is where segm_mask == 0.
+    is_fg = (segm_mask[coords[:, 1], coords[:, 0]] == 0)
 
     vis_start_frame = args.vis_start_frame # default 0
     vis_end_frame = args.vis_end_frame if args.vis_end_frame is not None else video.shape[0]
@@ -155,6 +175,7 @@ if __name__ == "__main__":
     parser.add_argument("--point-size", type=int, default=40)
     parser.add_argument("--linewidth", type=float, default=1.5)
     parser.add_argument("--plot-trails", action="store_true", default=False, help="Plot rainbow trails using homographies.")
+    parser.add_argument("--fm", action="store_true", default=False, help="Use flow matching trajectories.")
     args = parser.parse_args()
     
     run(args)

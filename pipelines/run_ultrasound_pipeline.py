@@ -21,6 +21,9 @@ Usage:
     # Skip training (if already trained):
     python run_ultrasound_pipeline.py --skip-training
 """
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import argparse
 import glob
@@ -44,7 +47,7 @@ DEFAULT_VIS_FPS = 10            # Visualization output framerate
 DEFAULT_GRID_INTERVAL = 10     # Pixel interval for grid query points
 
 # Project root (this file lives at the root of dino-tracker)
-PROJECT_ROOT = Path(__file__).resolve().parent
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 
 def setup_logging(output_dir: str) -> logging.Logger:
@@ -234,7 +237,7 @@ def process_video(
     if not skip_training:
         train_cmd = [
             sys.executable,
-            "train.py",
+            os.path.join("scripts", "train.py"),
             "--config", train_config,
             "--data-path", data_path,
         ]
@@ -263,7 +266,7 @@ def process_video(
         success = run_step(
             [
                 sys.executable,
-                "inference_grid.py",
+                os.path.join("scripts", "inference_grid.py"),
                 "--config", train_config,
                 "--data-path", data_path,
                 "--interval", str(grid_interval),

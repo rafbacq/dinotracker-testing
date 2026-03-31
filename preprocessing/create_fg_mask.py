@@ -1,7 +1,15 @@
 import argparse
+import os
+import sys
 import numpy as np
 import torch
 import torch.nn.functional as F
+
+# Ensure project root is on sys.path for subprocess execution
+_project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if _project_root not in sys.path:
+    sys.path.insert(0, _project_root)
+
 from data.data_utils import save_video_frames
 
 device = "cuda:0" if torch.cuda.is_available() else "cpu"

@@ -114,6 +114,10 @@ def save_video(video, output_path, fps=30):
         fps (int): frames per second. Defaults to 30.
     """
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    if video.shape[1] % 2 != 0 or video.shape[2] % 2 != 0:
+        pad_h = video.shape[1] % 2
+        pad_w = video.shape[2] % 2
+        video = np.pad(video, ((0, 0), (0, pad_h), (0, pad_w), (0, 0)), mode='edge')
     iiov3.imwrite(output_path, video, fps=fps, macro_block_size=None)
 
 

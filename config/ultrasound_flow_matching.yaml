@@ -1,0 +1,44 @@
+# Flow Matching config for ultrasound point tracking
+# Shares preprocessing with DinoTracker, trains a velocity network
+
+########################## checkpointing ##########################
+checkpoint_interval: 2000
+
+########################## data loader ##########################
+# Must match preprocessing resolution
+video_resw: 378
+video_resh: 280
+
+fg_traj_ratio: 0.5
+keep_traj_in_cpu: true
+train_batch_size: 512
+batch_n_frames: 4
+
+########################## optimization ##########################
+total_iterations: 4000
+lr_delta_dino: 0.001
+lr_velocity_net: 0.001
+weight_decay: 0.0001
+log_interval: 100
+
+########################## Flow Matching ##########################
+# Velocity network architecture
+hidden_dim: 512
+time_embed_dim: 64
+num_velocity_blocks: 6
+
+# ODE solver
+ode_steps: 10
+
+########################## Regularization ##########################
+# Embedding regularization (same as DinoTracker)
+lambda_emb_norm: 0.0001
+lambda_angle: 0.0001
+
+########################## DINO backbone ##########################
+stride: 7
+dino_patch_size: 14
+
+########################## Occlusion prediction ##########################
+anchor_cosine_similarity_threshold: 0.7
+cosine_similarity_threshold: 0.6
